@@ -1,9 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { Menu, X, LogOut, User as UserIcon, LayoutDashboard } from 'lucide-react';
 import LoginModal from './LoginModal';
 import { authService } from '../services/authService';
-import { soundService } from '../services/soundService';
 import { User } from '../types';
 import { LOGO_URL } from '../constants';
 
@@ -57,14 +55,12 @@ const Navigation: React.FC<NavigationProps> = ({ currentView = 'home', onNavigat
   ];
 
   const handleLogoutClick = () => {
-    soundService.playTap();
     authService.logout();
     if (onNavigate) onNavigate('home');
     setIsMobileMenuOpen(false);
   };
 
   const handleNavClick = (view: 'home' | 'cms', href?: string) => {
-    soundService.playTap();
     if (onNavigate) onNavigate(view);
     setIsMobileMenuOpen(false);
     if (view === 'home') {
@@ -79,10 +75,6 @@ const Navigation: React.FC<NavigationProps> = ({ currentView = 'home', onNavigat
     }
   };
 
-  const handleHover = () => {
-    soundService.playHover();
-  };
-
   return (
     <>
       <nav
@@ -93,7 +85,6 @@ const Navigation: React.FC<NavigationProps> = ({ currentView = 'home', onNavigat
         <div className="container mx-auto px-4 md:px-6 flex justify-between items-center">
           <a 
             href="#" 
-            onMouseEnter={handleHover}
             onClick={(e) => { e.preventDefault(); handleNavClick('home', '#'); }} 
             className="flex items-center gap-2 cursor-pointer group"
           >
@@ -117,7 +108,6 @@ const Navigation: React.FC<NavigationProps> = ({ currentView = 'home', onNavigat
               <a
                 key={link.name}
                 href={link.href}
-                onMouseEnter={handleHover}
                 onClick={(e) => { e.preventDefault(); handleNavClick('home', link.href); }}
                 className="text-sm font-medium text-accent hover:text-highlight transition-colors tracking-wide cursor-pointer"
               >
@@ -127,7 +117,6 @@ const Navigation: React.FC<NavigationProps> = ({ currentView = 'home', onNavigat
 
             {currentView === 'cms' && (
                <button
-                onMouseEnter={handleHover}
                 onClick={() => handleNavClick('home', '#')}
                 className="text-sm font-medium text-accent hover:text-highlight transition-colors tracking-wide cursor-pointer"
               >
@@ -138,7 +127,6 @@ const Navigation: React.FC<NavigationProps> = ({ currentView = 'home', onNavigat
             {user ? (
               <div className="flex items-center gap-4 border-l border-white/20 pl-4">
                  <button 
-                    onMouseEnter={handleHover}
                     onClick={() => handleNavClick('cms')}
                     className={`flex items-center gap-2 text-sm font-medium transition-colors ${currentView === 'cms' ? 'text-highlight' : 'text-accent hover:text-highlight'}`}
                  >
@@ -148,7 +136,6 @@ const Navigation: React.FC<NavigationProps> = ({ currentView = 'home', onNavigat
                     <UserIcon size={16} /> <span className="max-w-[100px] truncate">{user.name}</span>
                  </div>
                  <button 
-                  onMouseEnter={handleHover}
                   onClick={handleLogoutClick}
                   className="text-sm font-medium text-accent hover:text-red-400 transition-colors tracking-wide flex items-center gap-2"
                   title="Logout"
@@ -159,7 +146,6 @@ const Navigation: React.FC<NavigationProps> = ({ currentView = 'home', onNavigat
             ) : (
                 <a
                 href="#contact"
-                onMouseEnter={handleHover}
                 onClick={(e) => { e.preventDefault(); handleNavClick('home', '#contact'); }}
                 className="px-5 py-2 rounded border border-highlight text-highlight hover:bg-highlight hover:text-primary transition-all font-medium text-sm cursor-pointer"
                 >
@@ -170,7 +156,7 @@ const Navigation: React.FC<NavigationProps> = ({ currentView = 'home', onNavigat
 
           <button
             className="md:hidden text-accent p-2"
-            onClick={() => { soundService.playTap(); setIsMobileMenuOpen(!isMobileMenuOpen); }}
+            onClick={() => { setIsMobileMenuOpen(!isMobileMenuOpen); }}
           >
             {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
