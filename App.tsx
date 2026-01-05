@@ -1,13 +1,12 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Navigation from './components/Navigation';
 import CMSDashboard from './components/CMSDashboard';
 import Preloader from './components/Preloader';
 import { projectService } from './services/projectService';
 import { messageService } from './services/messageService';
-import { soundService } from './services/soundService';
 import { Project } from './types';
 import { EXPERIENCE, SERVICES, PROFILE_IMAGE_URL, SKILLS } from './constants';
-import { Volume2, VolumeX } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 
 interface PopupMessage {
   text: string;
@@ -16,7 +15,7 @@ interface PopupMessage {
 
 const ParticleBackground: React.FC = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const mouseRef = useRef({ x: -1000, y: -1000 }); // Initialize off-screen
+  const mouseRef = useRef({ x: -1000, y: -1000 });
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -55,42 +54,35 @@ const ParticleBackground: React.FC = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       
       particles.forEach((p, i) => {
-        // Basic Physics
         p.x += p.vx;
         p.y += p.vy;
 
-        // Boundary Check
         if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
         if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
 
-        // Mouse Interaction Logic
         const dx = mouseRef.current.x - p.x;
         const dy = mouseRef.current.y - p.y;
         const dist = Math.sqrt(dx * dx + dy * dy);
         const mouseThreshold = 200;
 
         if (dist < mouseThreshold) {
-          // Subtle gravity towards mouse
           const force = (mouseThreshold - dist) / mouseThreshold;
           p.x += dx * (force * 0.02);
           p.y += dy * (force * 0.02);
 
-          // Connection to mouse
           ctx.beginPath();
-          ctx.strokeStyle = `rgba(244, 162, 97, ${force * 0.4})`; // Higher opacity for mouse connections
+          ctx.strokeStyle = `rgba(244, 162, 97, ${force * 0.4})`;
           ctx.lineWidth = 0.5;
           ctx.moveTo(p.x, p.y);
           ctx.lineTo(mouseRef.current.x, mouseRef.current.y);
           ctx.stroke();
         }
 
-        // Render Particle
         ctx.fillStyle = 'rgba(237, 233, 214, 0.5)';
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
         ctx.fill();
 
-        // Inter-particle connections
         ctx.strokeStyle = 'rgba(237, 233, 214, 0.2)';
         ctx.lineWidth = 0.3;
         for (let j = i + 1; j < particles.length; j++) {
@@ -129,7 +121,6 @@ export default function App() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [activeCategory, setActiveCategory] = useState('all');
   const [showBackToTop, setShowBackToTop] = useState(false);
-  const [isMuted, setIsMuted] = useState(soundService.getMuteState());
 
   const [contactForm, setContactForm] = useState({ name: '', email: '', message: '' });
   const [contactStatus, setContactStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
@@ -163,7 +154,6 @@ export default function App() {
         }
       }
 
-      // Trigger scroll reveals
       const reveals = document.querySelectorAll('.reveal');
       reveals.forEach(reveal => {
         const windowHeight = window.innerHeight;
@@ -175,7 +165,7 @@ export default function App() {
       });
     };
     window.addEventListener('scroll', handleScroll);
-    handleScroll(); // Initial check
+    handleScroll();
     return () => window.removeEventListener('scroll', handleScroll);
   }, [skillsAnimated, currentView, projects]);
 
@@ -209,24 +199,12 @@ export default function App() {
     return () => clearTimeout(initialTimeout);
   }, [loading]);
 
-  const toggleMute = () => {
-    const newState = soundService.toggleMute();
-    setIsMuted(newState);
-    if (!newState) soundService.playTap();
-  };
-
   const scrollToTop = () => {
-    soundService.playTap();
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleCategoryChange = (cat: string) => {
-    soundService.playTap();
     setActiveCategory(cat);
-  };
-
-  const handleProjectHover = () => {
-    soundService.playHover();
   };
 
   const handleTiltMove = (e: React.MouseEvent<HTMLAnchorElement>) => {
@@ -240,7 +218,6 @@ export default function App() {
     const rotateY = ((x - centerX) / centerX) * 12;
     card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale(1.04)`;
     
-    // Light effect tracking
     const light = card.querySelector('.card-light') as HTMLElement;
     if (light) {
       light.style.opacity = '1';
@@ -267,7 +244,6 @@ export default function App() {
     e.preventDefault();
     if (!contactForm.name || !contactForm.email || !contactForm.message) return;
     setContactStatus('sending');
-    soundService.playTap();
     try {
         await messageService.sendMessage({
             name: contactForm.name,
@@ -275,7 +251,6 @@ export default function App() {
             content: contactForm.message
         });
         setContactStatus('success');
-        soundService.playSuccess();
         setContactForm({ name: '', email: '', message: '' });
         setTimeout(() => setContactStatus('idle'), 3000);
     } catch (error: any) {
@@ -287,8 +262,6 @@ export default function App() {
   return (
     <div className="font-sans text-white bg-[#013328] overflow-x-hidden min-h-screen">
       {loading && <Preloader onComplete={() => setLoading(false)} />}
-      
-      {/* Interactive Background */}
       <ParticleBackground />
 
       <style>{`
@@ -404,7 +377,7 @@ export default function App() {
                 <h2 className="text-3xl md:text-4xl text-[#f4a261] border-b-2 border-[#f4a261] inline-block mb-16 pb-2 font-bold uppercase tracking-widest">Expertise</h2>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
                     {SERVICES.map((service) => (
-                        <div key={service.id} onMouseEnter={() => soundService.playHover()} className="bg-[#ede9d6] p-10 rounded-2xl shadow-xl hover:-translate-y-3 transition-all duration-500 group">
+                        <div key={service.id} className="bg-[#ede9d6] p-10 rounded-2xl shadow-xl hover:-translate-y-3 transition-all duration-500 group">
                             <div className="w-20 h-20 bg-[#013328] rounded-2xl flex items-center justify-center mx-auto mb-8 shadow-lg group-hover:rotate-12 transition-transform">
                                 <i className={`fas ${service.icon} text-3xl text-[#f4a261]`}></i>
                             </div>
@@ -426,7 +399,7 @@ export default function App() {
                         <div className="flex-1 w-full"></div>
                         <div className="absolute left-4 md:left-1/2 -translate-x-1/2 w-4 h-4 bg-[#f4a261] rounded-full shadow-[0_0_15px_#f4a261] z-10 mt-1.5 md:mt-0 outline outline-4 outline-[#013328]"></div>
                         <div className={`flex-1 w-full pl-12 md:pl-0 ${index % 2 === 0 ? 'md:pr-12 md:text-right' : 'md:pl-12'}`}>
-                            <div onMouseEnter={() => soundService.playHover()} className="bg-white/5 backdrop-blur-sm border border-white/10 p-8 md:p-10 rounded-3xl hover:border-[#f4a261]/30 transition-all duration-300">
+                            <div className="bg-white/5 backdrop-blur-sm border border-white/10 p-8 md:p-10 rounded-3xl hover:border-[#f4a261]/30 transition-all duration-300">
                                 <span className="inline-block px-4 py-1.5 bg-[#f4a261]/10 text-[#f4a261] text-xs font-bold rounded-full mb-4 uppercase tracking-widest">
                                     {exp.period}
                                 </span>
@@ -503,8 +476,6 @@ export default function App() {
                                 href={proj.link || '#'} 
                                 target="_blank" 
                                 rel="noreferrer"
-                                onMouseEnter={handleProjectHover}
-                                onClick={() => soundService.playTap()}
                                 className="project-card group block bg-[#ede9d6] rounded-3xl overflow-hidden shadow-2xl hover:shadow-[0_40px_80px_rgba(0,0,0,0.5)] transition-all duration-300 show cursor-pointer no-underline text-[#333] flex flex-col h-full"
                                 onMouseMove={handleTiltMove}
                                 onMouseLeave={handleTiltLeave}
@@ -618,7 +589,7 @@ export default function App() {
                             { name: 'LinkedIn', url: 'https://linkedin.com', icon: 'fa-linkedin-in', color: 'hover:bg-[#0A66C2]' },
                             { name: 'Telegram', url: 'https://t.me/', icon: 'fa-telegram-plane', color: 'hover:bg-[#0088cc]' }
                         ].map((social) => (
-                            <a key={social.name} href={social.url} target="_blank" rel="noreferrer" onMouseEnter={() => soundService.playHover()} onClick={() => soundService.playTap()} className={`group w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center transition-all duration-300 hover:-translate-y-2 shadow-xl ${social.color}`} aria-label={social.name}>
+                            <a key={social.name} href={social.url} target="_blank" rel="noreferrer" className={`group w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center transition-all duration-300 hover:-translate-y-2 shadow-xl ${social.color}`} aria-label={social.name}>
                                 <i className={`fab ${social.icon} text-2xl text-[#f4a261] group-hover:text-white transition-colors duration-300`}></i>
                             </a>
                         ))}
@@ -636,15 +607,6 @@ export default function App() {
 
         <button onClick={scrollToTop} className={`fixed right-8 bottom-8 w-14 h-14 bg-[#f4a261] rounded-2xl flex items-center justify-center z-50 transition-all duration-500 hover:scale-110 shadow-2xl hover:shadow-[#f4a261]/50 ${showBackToTop ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10 pointer-events-none'}`} aria-label="Go to top">
             <svg viewBox="0 0 24 24" className="w-8 h-8 fill-[#013328]"><path d="M12 4l-7 7h4v7h6v-7h4L12 4z"></path></svg>
-        </button>
-
-        {/* Sound Control Toggle */}
-        <button 
-            onClick={toggleMute}
-            className="fixed left-8 bottom-8 w-14 h-14 bg-[#021a15]/80 backdrop-blur-xl border border-white/10 rounded-2xl flex items-center justify-center z-50 transition-all duration-300 hover:scale-110 hover:border-[#f4a261] shadow-2xl"
-            aria-label={isMuted ? "Unmute sounds" : "Mute sounds"}
-        >
-            {isMuted ? <VolumeX className="text-gray-400" size={24} /> : <Volume2 className="text-[#f4a261] animate-pulse" size={24} />}
         </button>
         </>
       ) : (
